@@ -1,7 +1,11 @@
 package com.susantedit.duofold.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.susantedit.duofold.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,9 +79,6 @@ fun DemoContentView(
     onCalibrateClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
-    val categories = listOf("All", "Health", "Work", "Reading", "Travel")
-    var selected by remember { mutableStateOf("All") }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -89,11 +90,11 @@ fun DemoContentView(
             .navigationBarsPadding()
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        // Header: date + Today, gear + avatar on the right.
+        // Header: Fold Motion title + slogan, settings on the right.
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Thursday, 09 May", color = InkGray, fontSize = 12.sp)
-                Text("Today", color = InkBlack, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text("Fold Motion", color = InkBlack, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text("Motion that bends with screen", color = InkGray, fontSize = 13.sp)
             }
             IconButton(
                 onClick = onSettingsClick,
@@ -101,102 +102,27 @@ fun DemoContentView(
             ) {
                 Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = InkGray)
             }
-            Spacer(Modifier.width(4.dp))
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFF2662E)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Person, contentDescription = null, tint = Color.White)
-            }
         }
 
         Spacer(Modifier.height(14.dp))
 
-        // Category chips.
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
-            items(categories) { cat ->
-                if (cat == selected) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(AccentBlue)
-                            .clickable { selected = cat }
-                            .padding(horizontal = 18.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(cat, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                } else {
-                    Text(
-                        cat,
-                        color = InkGray,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .clickable { selected = cat }
-                            .padding(vertical = 8.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(14.dp))
-
-        // Hero gradient card.
+        // Fold Motion Showcase Hero Card with the full logo image
         Card(
             shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F0F14))
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF7B5CFF), Color(0xFFC44EDD), Color(0xFFF0564A))
-                        )
-                    )
-                    .padding(20.dp)
-                ) {
-                Column {
-                    Row(verticalAlignment = Alignment.Top) {
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                "FOCUS SCORE",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                "2,000",
-                                color = Color.White,
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Icon(Icons.Filled.NorthEast, contentDescription = null, tint = Color.White)
-                    }
-                    Text(
-                        "Small steps every day compound into big results. Keep the streak alive.",
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 13.sp
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf(18, 34, 28, 42, 30, 46, 26, 38, 50, 36, 28, 20).forEach { h ->
-                            Box(
-                                modifier = Modifier
-                                    .size(width = 16.dp, height = h.dp)
-                                    .clip(RoundedCornerShape(5.dp))
-                                    .background(Color.White.copy(alpha = 0.92f))
-                            )
-                        }
-                    }
-                }
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.fold_motion_logo),
+                    contentDescription = "Fold Motion Logo",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 
