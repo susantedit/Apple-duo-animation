@@ -103,6 +103,7 @@ fun Modifier.foldEffect(
                 // in physical device px, so normalize — otherwise dense screens
                 // darken ~pxPerMm/6x too fast and crush to black (iOS-unfaithful).
                 setFloatUniform("darkening", parameters.darkening * 6f / resolvedPxPerMm)
+                setFloatUniform("isVertical", parameters.isVertical)
             }
         } catch (e: Exception) {
             Log.e("FoldEffect", "RuntimeShader failed: ${e.message}", e)

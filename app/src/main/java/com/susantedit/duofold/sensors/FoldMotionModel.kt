@@ -72,6 +72,8 @@ class FoldMotionModel(context: Context) : SensorEventListener {
     private var lastPredicted = 0f
     private var autoRecenter = true
     private var lastTimestampNs = 0L
+    var isVerticalOrientation = false
+    var invertTilt = false
 
     private val _tiltDegrees = MutableStateFlow(0f)
     val tiltDegrees: StateFlow<Float> = _tiltDegrees.asStateFlow()
@@ -130,8 +132,9 @@ class FoldMotionModel(context: Context) : SensorEventListener {
      */
     fun setManualTilt(degrees: Float) {
         val clamped = degrees.coerceIn(-MAX_TILT, MAX_TILT)
-        _tiltDegrees.value = clamped
-        _hingeSide.value = if (clamped >= 0f) 1f else -1f
+        val directed = if (invertTilt) -clamped else clamped
+        _tiltDegrees.value = directed
+        _hingeSide.value = if (directed >= 0f) 1f else -1f
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -150,16 +153,25 @@ class FoldMotionModel(context: Context) : SensorEventListener {
 
                 // Current screen axes expressed in the calibrated screen frame.
                 val rel = multiply3(transpose3(reference!!), screenMatrix)
-                // Current screen normal (column 2): excursion toward screen-right.
-                val measured = atan2(rel[2].toDouble(), rel[8].toDouble()).toFloat()
+                // In horizontal mode: excursion toward screen-right (column 2, index 2).
+                // In vertical mode: excursion toward screen-top (column 2, index 5).
+                val measured = if (isVerticalOrientation) {
+                    atan2(rel[5].toDouble(), rel[8].toDouble()).toFloat()
+                } else {
+                    atan2(rel[2].toDouble(), rel[8].toDouble()).toFloat()
+                }
 
-                // Extrapolate along the rotation rate around the screen's Y axis.
+                // Extrapolate along the rotation rate around the screen's active fold axis.
                 var predicted = measured
                 if (hasGyroSample) {
-                    val sy = screenYinDeviceCoords()
-                    val omegaY =
+                    val omega = if (isVerticalOrientation) {
+                        val sx = screenXinDeviceCoords()
+                        gyroRate[0] * sx[0] + gyroRate[1] * sx[1] + gyroRate[2] * sx[2]
+                    } else {
+                        val sy = screenYinDeviceCoords()
                         gyroRate[0] * sy[0] + gyroRate[1] * sy[1] + gyroRate[2] * sy[2]
-                    predicted = measured + omegaY * PREDICTION_INTERVAL
+                    }
+                    predicted = measured + omega * PREDICTION_INTERVAL
                 }
                 lastPredicted = predicted
 
@@ -189,8 +201,9 @@ class FoldMotionModel(context: Context) : SensorEventListener {
                     if (autoRecenter) wrapAngle(predicted - baselineRad) else predicted
 
                 tiltRad += wrapAngle(target - tiltRad) * SMOOTHING
-                val tiltDeg = Math.toDegrees(tiltRad.toDouble()).toFloat()
+                val rawTiltDeg = Math.toDegrees(tiltRad.toDouble()).toFloat()
                     .coerceIn(-MAX_TILT, MAX_TILT)
+                val tiltDeg = if (invertTilt) -rawTiltDeg else rawTiltDeg
                 _tiltDegrees.value = tiltDeg
                 _hingeSide.value = if (tiltDeg >= 0f) 1f else -1f
             }
@@ -227,6 +240,14 @@ class FoldMotionModel(context: Context) : SensorEventListener {
         Surface.ROTATION_180 -> SensorManager.AXIS_MINUS_X to SensorManager.AXIS_MINUS_Y
         Surface.ROTATION_270 -> SensorManager.AXIS_MINUS_Y to SensorManager.AXIS_X
         else -> SensorManager.AXIS_X to SensorManager.AXIS_Y
+    }
+
+    /** Screen-right (X) axis expressed in raw device coordinates (for pitch gyro). */
+    private fun screenXinDeviceCoords(): FloatArray = when (displayRotation()) {
+        Surface.ROTATION_90 -> floatArrayOf(0f, 1f, 0f)
+        Surface.ROTATION_180 -> floatArrayOf(-1f, 0f, 0f)
+        Surface.ROTATION_270 -> floatArrayOf(0f, -1f, 0f)
+        else -> floatArrayOf(1f, 0f, 0f)
     }
 
     /** Screen-up (Y) axis expressed in raw device coordinates (for gyro dot). */

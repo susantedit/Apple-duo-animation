@@ -56,24 +56,12 @@ fun ContentView(motionModel: FoldMotionModel) {
     val params = remember { FoldParameters() }
 
     Box(Modifier.fillMaxSize()) {
-        // Folded content. On pre-33 (previews only — minSdk is 33) show it plain.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            DemoContentView(
-                Modifier.foldEffect(
-                    tiltDegrees = tilt,
-                    hingeSide = hinge,
-                    parameters = params
-                ),
-                onCalibrateClick = { motionModel.recalibrate() },
-                onSettingsClick = { showSettings = true }
-            )
-        } else {
-            DemoContentView(
-                Modifier,
-                onCalibrateClick = { motionModel.recalibrate() },
-                onSettingsClick = { showSettings = true }
-            )
-        }
+        DemoContentView(
+            tiltDegrees = tilt,
+            hingeSide = hinge,
+            onCalibrateClick = { motionModel.recalibrate() },
+            onSettingsClick = { showSettings = true }
+        )
 
         if (showSettings) {
             AlertDialog(
