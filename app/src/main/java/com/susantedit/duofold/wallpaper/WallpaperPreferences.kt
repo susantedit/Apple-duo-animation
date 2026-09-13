@@ -178,6 +178,9 @@ object WallpaperPreferences {
      */
     fun resolveEffectiveTheme(context: Context): String {
         val baseTheme = getTheme(context)
+        if (baseTheme == THEME_CUSTOM) {
+            return THEME_CUSTOM
+        }
         return when (getAutoThemeMode(context)) {
             AUTO_THEME_SYSTEM -> {
                 val nightMode = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK)

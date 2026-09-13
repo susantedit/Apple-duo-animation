@@ -159,10 +159,21 @@ fun DemoContentView(
 
     // Custom image reload trigger
     var customImageUpdateCount by remember { mutableIntStateOf(0) }
-    val customBitmap = remember(customImageUpdateCount, effectiveTheme) {
+    val customBitmap = remember(customImageUpdateCount, effectiveTheme, selectedTheme) {
         val file = WallpaperPreferences.getCustomImageFile(context)
-        if (file.exists() && effectiveTheme == WallpaperPreferences.THEME_CUSTOM) {
-            BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+        if (file.exists() && (effectiveTheme == WallpaperPreferences.THEME_CUSTOM || selectedTheme == WallpaperPreferences.THEME_CUSTOM)) {
+            try {
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(file.absolutePath, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 2000 || bounds.outHeight / sample > 3000) {
+                    sample *= 2
+                }
+                val opts = BitmapFactory.Options().apply { inSampleSize = sample }
+                BitmapFactory.decodeFile(file.absolutePath, opts)?.asImageBitmap()
+            } catch (t: Throwable) {
+                null
+            }
         } else null
     }
 

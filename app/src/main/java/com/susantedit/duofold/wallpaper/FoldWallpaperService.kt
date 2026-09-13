@@ -69,6 +69,7 @@ class FoldWallpaperService : WallpaperService() {
         private var solarR: Float = 1f
         private var solarG: Float = 1f
         private var solarB: Float = 1f
+        private var lastCustomImageModified: Long = 0L
 
         private var touchTiltOffset: Float = 0f
         private var lastTouchX: Float = 0f
@@ -205,8 +206,13 @@ class FoldWallpaperService : WallpaperService() {
             solarB = solar.b
 
             val newTheme = WallpaperPreferences.resolveEffectiveTheme(ctx)
-            if (wallpaperBitmap == null || newTheme != currentTheme) {
+            val customFile = WallpaperPreferences.getCustomImageFile(ctx)
+            val customModified = if (customFile.exists()) customFile.lastModified() else 0L
+            val customChanged = (newTheme == WallpaperPreferences.THEME_CUSTOM && customModified != lastCustomImageModified)
+
+            if (wallpaperBitmap == null || newTheme != currentTheme || customChanged) {
                 currentTheme = newTheme
+                lastCustomImageModified = customModified
                 updateBitmap()
             }
         }

@@ -56,9 +56,25 @@ object ThemeManager {
 
     private fun loadCustomBitmap(context: Context, w: Int, h: Int): Bitmap? {
         val file = WallpaperPreferences.getCustomImageFile(context)
-        if (!file.exists()) return null
+        if (!file.exists() || file.length() <= 0L) return null
         return try {
-            val src = BitmapFactory.decodeFile(file.absolutePath) ?: return null
+            val boundsOptions = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeFile(file.absolutePath, boundsOptions)
+            if (boundsOptions.outWidth <= 0 || boundsOptions.outHeight <= 0) return null
+
+            var sampleSize = 1
+            while ((boundsOptions.outWidth / sampleSize) > w * 2 || (boundsOptions.outHeight / sampleSize) > h * 2) {
+                sampleSize *= 2
+            }
+
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            val src = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return null
+
             val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(out)
             val scale = maxOf(w.toFloat() / src.width, h.toFloat() / src.height)
@@ -71,7 +87,8 @@ object ThemeManager {
             canvas.drawBitmap(src, null, destRect, paint)
             src.recycle()
             out
-        } catch (_: Exception) {
+        } catch (t: Throwable) {
+            android.util.Log.e("ThemeManager", "Error decoding custom wallpaper", t)
             null
         }
     }
