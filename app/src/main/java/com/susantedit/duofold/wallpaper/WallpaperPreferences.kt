@@ -38,6 +38,12 @@ object WallpaperPreferences {
     const val GLOW_EMERALD = "EMERALD"
     const val GLOW_RUBY = "RUBY"
 
+    const val CREASE_COLOR_CYAN = GLOW_CYAN
+    const val CREASE_COLOR_GOLD = GLOW_GOLD
+    const val CREASE_COLOR_VIOLET = GLOW_VIOLET
+    const val CREASE_COLOR_EMERALD = GLOW_EMERALD
+    const val CREASE_COLOR_RUBY = GLOW_RUBY
+
     const val THEME_GOLD = "GOLD"
     const val THEME_DARK = "DARK_AMOLED"
     const val THEME_SILVER = "FROSTED_SILVER"

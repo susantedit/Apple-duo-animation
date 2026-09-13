@@ -822,12 +822,12 @@ fun DemoContentView(
                 ) {
                     Text("Glow Aura Hue", color = TextWhite, fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        val glowHues = listOf(
-                            WallpaperPreferences.CREASE_COLOR_CYAN to Color(0xFF00E5FF),
-                            WallpaperPreferences.CREASE_COLOR_GOLD to Color(0xFFFFD700),
-                            WallpaperPreferences.CREASE_COLOR_VIOLET to Color(0xFFD000FF),
-                            WallpaperPreferences.CREASE_COLOR_EMERALD to Color(0xFF00FF88),
-                            WallpaperPreferences.CREASE_COLOR_RUBY to Color(0xFFFF1744)
+                        val glowHues: List<Pair<String, Color>> = listOf(
+                            WallpaperPreferences.GLOW_CYAN to Color(0xFF00E5FF),
+                            WallpaperPreferences.GLOW_GOLD to Color(0xFFFFD700),
+                            WallpaperPreferences.GLOW_VIOLET to Color(0xFFD000FF),
+                            WallpaperPreferences.GLOW_EMERALD to Color(0xFF00FF88),
+                            WallpaperPreferences.GLOW_RUBY to Color(0xFFFF1744)
                         )
                         glowHues.forEach { (name, color) ->
                             val isSelected = creaseColorName == name
