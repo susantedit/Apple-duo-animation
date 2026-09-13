@@ -34,15 +34,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Collections
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Screenshot
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Vibration
@@ -125,6 +137,7 @@ fun DemoContentView(
     var deskFloatEnabled by remember { mutableStateOf(WallpaperPreferences.isDeskFloatEnabled(context)) }
     var solarTrackingEnabled by remember { mutableStateOf(WallpaperPreferences.isSolarTrackingEnabled(context)) }
     val solarData = remember(solarTrackingEnabled) { WallpaperPreferences.getSolarData(context) }
+    var showAppIconsOverlay by remember { mutableStateOf(true) }
 
     val effectiveTheme = remember(selectedTheme, autoThemeMode) {
         WallpaperPreferences.resolveEffectiveTheme(context)
@@ -425,16 +438,30 @@ fun DemoContentView(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("LIVE 3D PREVIEW", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Text(
-                if (isVertical) {
-                    if (invertTilt) "Vertical Flip (Upside-Down)" else "Flip Clamshell Fold"
-                } else {
-                    if (invertTilt) "Book Fold (Inverted)" else "Book Horizontal Fold"
-                },
-                color = AccentGold,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (showAppIconsOverlay) AccentGold else CardBorder,
+                modifier = Modifier.clickable { showAppIconsOverlay = !showAppIconsOverlay }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Apps,
+                        contentDescription = null,
+                        tint = if (showAppIconsOverlay) Color.Black else TextMuted,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        if (showAppIconsOverlay) "App Icons: Bending" else "Wallpaper Only",
+                        color = if (showAppIconsOverlay) Color.Black else TextMuted,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
         Spacer(Modifier.height(8.dp))
 
@@ -449,7 +476,7 @@ fun DemoContentView(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(290.dp)
+                    .height(310.dp)
                     .clip(RoundedCornerShape(22.dp))
             ) {
                 Box(
@@ -506,6 +533,54 @@ fun DemoContentView(
                             modifier = Modifier.fillMaxSize()
                         )
                     }
+
+                    // App Icons Grid Overlay — bends and blurs dynamically with the 3D shader
+                    if (showAppIconsOverlay) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp, vertical = 18.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                PreviewAppIconItem("Phone", Icons.Filled.Call, Color(0xFF22C55E))
+                                PreviewAppIconItem("Messages", Icons.Filled.Chat, Color(0xFF3B82F6))
+                                PreviewAppIconItem("Camera", Icons.Filled.PhotoCamera, Color(0xFFE11D48))
+                                PreviewAppIconItem("Chrome", Icons.Filled.Public, Color(0xFFEAB308))
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                PreviewAppIconItem("Photos", Icons.Filled.Collections, Color(0xFFEC4899))
+                                PreviewAppIconItem("Music", Icons.Filled.MusicNote, Color(0xFFA855F7))
+                                PreviewAppIconItem("Settings", Icons.Filled.Settings, Color(0xFF64748B))
+                                PreviewAppIconItem("Store", Icons.Filled.ShoppingBag, Color(0xFF10B981))
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = Color.White.copy(alpha = 0.22f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceAround
+                                ) {
+                                    PreviewAppIconItem("Call", Icons.Filled.Phone, Color(0xFF22C55E), showLabel = false)
+                                    PreviewAppIconItem("Web", Icons.Filled.Language, Color(0xFF06B6D4), showLabel = false)
+                                    PreviewAppIconItem("Mail", Icons.Filled.Email, Color(0xFFEF4444), showLabel = false)
+                                    PreviewAppIconItem("Apps", Icons.Filled.Apps, Color(0xFFF59E0B), showLabel = false)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Surface(
@@ -521,6 +596,65 @@ fun DemoContentView(
                         fontSize = 11.sp,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // Feature Card: Bending Real Home Screen App Icons
+        Card(
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF141722)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color(0xFF38BDF8).copy(alpha = 0.4f), RoundedCornerShape(18.dp))
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Screenshot,
+                        contentDescription = null,
+                        tint = Color(0xFF38BDF8),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Bend Real Home Screen App Icons",
+                            color = TextWhite,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Android places launcher icons in a layer above wallpapers. Use this trick to bend your actual home screen icons:",
+                            color = TextMuted,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                Text("1. Take a screenshot of your home screen (Press Volume Down + Power).", color = Color(0xFFE2E8F0), fontSize = 12.sp)
+                Spacer(Modifier.height(4.dp))
+                Text("2. Tap the button below and select that screenshot from Gallery.", color = Color(0xFFE2E8F0), fontSize = 12.sp)
+                Spacer(Modifier.height(4.dp))
+                Text("3. Tap 'Apply to Screen' — now all your icons & widgets physically bend and blur!", color = Color(0xFFE2E8F0), fontSize = 12.sp)
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                ) {
+                    Icon(Icons.Filled.Screenshot, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Import Home Screen Screenshot", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }
@@ -1199,6 +1333,35 @@ private fun AutoThemeChip(
                 text = subtitle,
                 color = if (selected) AccentGold.copy(alpha = 0.8f) else TextMuted,
                 fontSize = 9.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun PreviewAppIconItem(
+    name: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconBg: Color,
+    showLabel: Boolean = true
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(iconBg)
+        ) {
+            Icon(icon, contentDescription = name, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+        if (showLabel) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = name,
+                color = Color.White,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Medium
             )
         }
     }
