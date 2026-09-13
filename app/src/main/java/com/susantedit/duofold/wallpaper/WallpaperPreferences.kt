@@ -21,6 +21,11 @@ object WallpaperPreferences {
     const val KEY_ONBOARDING_DISMISSED = "onboarding_dismissed"
     const val KEY_SPECULAR_INTENSITY = "specular_intensity"
     const val KEY_CHROMATIC_ABERRATION = "chromatic_aberration"
+    const val KEY_AUTO_THEME_MODE = "auto_theme_mode"
+
+    const val AUTO_THEME_OFF = "OFF"
+    const val AUTO_THEME_SYSTEM = "SYSTEM"
+    const val AUTO_THEME_SCHEDULE = "SCHEDULE"
 
     const val THEME_GOLD = "GOLD"
     const val THEME_DARK = "DARK_AMOLED"
@@ -141,5 +146,54 @@ object WallpaperPreferences {
 
     fun setChromaticAberration(context: Context, value: Float) {
         getPrefs(context).edit().putFloat(KEY_CHROMATIC_ABERRATION, value).apply()
+    }
+
+    fun getAutoThemeMode(context: Context): String =
+        getPrefs(context).getString(KEY_AUTO_THEME_MODE, AUTO_THEME_OFF) ?: AUTO_THEME_OFF
+
+    fun setAutoThemeMode(context: Context, mode: String) {
+        getPrefs(context).edit().putString(KEY_AUTO_THEME_MODE, mode).apply()
+    }
+
+    /**
+     * Resolves the active theme considering Day/Night automation.
+     * When night is active in automatic mode, switches to THEME_DARK for battery & eye comfort.
+     */
+    fun resolveEffectiveTheme(context: Context): String {
+        val baseTheme = getTheme(context)
+        return when (getAutoThemeMode(context)) {
+            AUTO_THEME_SYSTEM -> {
+                val nightMode = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                if (nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
+                    THEME_DARK
+                } else {
+                    baseTheme
+                }
+            }
+            AUTO_THEME_SCHEDULE -> {
+                val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                // Night is 18:00 (6 PM) to 06:00 (6 AM)
+                if (hour < 6 || hour >= 18) {
+                    THEME_DARK
+                } else {
+                    baseTheme
+                }
+            }
+            else -> baseTheme
+        }
+    }
+
+    fun isAutoNightActive(context: Context): Boolean {
+        return when (getAutoThemeMode(context)) {
+            AUTO_THEME_SYSTEM -> {
+                val nightMode = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            }
+            AUTO_THEME_SCHEDULE -> {
+                val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                hour < 6 || hour >= 18
+            }
+            else -> false
+        }
     }
 }

@@ -115,6 +115,14 @@ fun DemoContentView(
     var onboardingDismissed by remember { mutableStateOf(WallpaperPreferences.isOnboardingDismissed(context)) }
     var specularIntensity by remember { mutableFloatStateOf(WallpaperPreferences.getSpecularIntensity(context)) }
     var chromaticAberration by remember { mutableFloatStateOf(WallpaperPreferences.getChromaticAberration(context)) }
+    var autoThemeMode by remember { mutableStateOf(WallpaperPreferences.getAutoThemeMode(context)) }
+
+    val effectiveTheme = remember(selectedTheme, autoThemeMode) {
+        WallpaperPreferences.resolveEffectiveTheme(context)
+    }
+    val isNightActive = remember(autoThemeMode) {
+        WallpaperPreferences.isAutoNightActive(context)
+    }
 
     val wallpaperManager = remember { WallpaperManager.getInstance(context) }
     var isLiveWallpaperActive by remember {
@@ -129,9 +137,9 @@ fun DemoContentView(
 
     // Custom image reload trigger
     var customImageUpdateCount by remember { mutableIntStateOf(0) }
-    val customBitmap = remember(customImageUpdateCount, selectedTheme) {
+    val customBitmap = remember(customImageUpdateCount, effectiveTheme) {
         val file = WallpaperPreferences.getCustomImageFile(context)
-        if (file.exists() && selectedTheme == WallpaperPreferences.THEME_CUSTOM) {
+        if (file.exists() && effectiveTheme == WallpaperPreferences.THEME_CUSTOM) {
             BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
         } else null
     }
@@ -438,14 +446,14 @@ fun DemoContentView(
                         Modifier.fillMaxSize()
                     }
                 ) {
-                    if (selectedTheme == WallpaperPreferences.THEME_CUSTOM && customBitmap != null) {
+                    if (effectiveTheme == WallpaperPreferences.THEME_CUSTOM && customBitmap != null) {
                         Image(
                             bitmap = customBitmap,
                             contentDescription = "Custom Wallpaper",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
-                    } else if (selectedTheme == WallpaperPreferences.THEME_DARK) {
+                    } else if (effectiveTheme == WallpaperPreferences.THEME_DARK) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -458,7 +466,7 @@ fun DemoContentView(
                                 Text("Deep Blacks · Luminous Neon", color = TextMuted, fontSize = 12.sp)
                             }
                         }
-                    } else if (selectedTheme == WallpaperPreferences.THEME_SILVER) {
+                    } else if (effectiveTheme == WallpaperPreferences.THEME_SILVER) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -573,6 +581,67 @@ fun DemoContentView(
                 onClick = {
                     selectedTheme = WallpaperPreferences.THEME_SILVER
                     WallpaperPreferences.setTheme(context, WallpaperPreferences.THEME_SILVER)
+                }
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Long-Term Retention Feature: Day / Night Auto-Theme Switcher
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("DAY / NIGHT AUTO-THEME", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            if (autoThemeMode != WallpaperPreferences.AUTO_THEME_OFF) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (isNightActive) Color(0xFF261D45) else Color(0x33E5B869)
+                ) {
+                    Text(
+                        text = if (isNightActive) "🌙 AMOLED Active" else "☀️ Day Active",
+                        color = if (isNightActive) Color(0xFFC4B5FD) else AccentGold,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            AutoThemeChip(
+                title = "Manual",
+                subtitle = "Fixed Theme",
+                selected = autoThemeMode == WallpaperPreferences.AUTO_THEME_OFF,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    autoThemeMode = WallpaperPreferences.AUTO_THEME_OFF
+                    WallpaperPreferences.setAutoThemeMode(context, WallpaperPreferences.AUTO_THEME_OFF)
+                }
+            )
+            AutoThemeChip(
+                title = "System Dark",
+                subtitle = "Sync with Phone",
+                selected = autoThemeMode == WallpaperPreferences.AUTO_THEME_SYSTEM,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    autoThemeMode = WallpaperPreferences.AUTO_THEME_SYSTEM
+                    WallpaperPreferences.setAutoThemeMode(context, WallpaperPreferences.AUTO_THEME_SYSTEM)
+                }
+            )
+            AutoThemeChip(
+                title = "Sunset Clock",
+                subtitle = "6 PM to 6 AM",
+                selected = autoThemeMode == WallpaperPreferences.AUTO_THEME_SCHEDULE,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    autoThemeMode = WallpaperPreferences.AUTO_THEME_SCHEDULE
+                    WallpaperPreferences.setAutoThemeMode(context, WallpaperPreferences.AUTO_THEME_SCHEDULE)
                 }
             )
         }
@@ -945,6 +1014,44 @@ private fun DirectionCard(
             Spacer(Modifier.height(8.dp))
             Text(title, color = if (selected) AccentGold else TextWhite, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Text(subtitle, color = TextMuted, fontSize = 11.sp)
+        }
+    }
+}
+
+@Composable
+private fun AutoThemeChip(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (selected) AccentGoldDim else CardBg)
+            .border(
+                1.dp,
+                if (selected) AccentGold else CardBorder,
+                RoundedCornerShape(12.dp)
+            )
+            .clickable { onClick() }
+            .padding(vertical = 10.dp, horizontal = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = title,
+                color = if (selected) AccentGold else TextWhite,
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                color = if (selected) AccentGold.copy(alpha = 0.8f) else TextMuted,
+                fontSize = 9.sp
+            )
         }
     }
 }

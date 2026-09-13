@@ -65,6 +65,12 @@ class FoldWallpaperService : WallpaperService() {
 
         private var gestureDetector: GestureDetector? = null
 
+        private val timeReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                checkAutoThemeTransition()
+            }
+        }
+
         private var pxPerMm: Float = 6f
         private var surfaceWidth: Int = 1080
         private var surfaceHeight: Int = 2400
@@ -78,6 +84,16 @@ class FoldWallpaperService : WallpaperService() {
             pxPerMm = if (xdpi.isFinite() && xdpi > 0f) xdpi / 25.4f else 6f
 
             motionModel = FoldMotionModel(applicationContext)
+
+            val timeFilter = IntentFilter().apply {
+                addAction(Intent.ACTION_TIME_TICK)
+                addAction(Intent.ACTION_TIME_CHANGED)
+                addAction(Intent.ACTION_TIMEZONE_CHANGED)
+                addAction(Intent.ACTION_CONFIGURATION_CHANGED)
+            }
+            try {
+                registerReceiver(timeReceiver, timeFilter)
+            } catch (_: Exception) {}
 
             gestureDetector = GestureDetector(
                 this@FoldWallpaperService,
@@ -127,10 +143,20 @@ class FoldWallpaperService : WallpaperService() {
             specularIntensity = WallpaperPreferences.getSpecularIntensity(ctx)
             chromaticAberration = WallpaperPreferences.getChromaticAberration(ctx)
 
-            val newTheme = WallpaperPreferences.getTheme(ctx)
+            val newTheme = WallpaperPreferences.resolveEffectiveTheme(ctx)
             if (wallpaperBitmap == null || newTheme != currentTheme) {
                 currentTheme = newTheme
                 updateBitmap()
+            }
+        }
+
+        private fun checkAutoThemeTransition() {
+            val ctx = this@FoldWallpaperService
+            val newTheme = WallpaperPreferences.resolveEffectiveTheme(ctx)
+            if (newTheme != currentTheme) {
+                currentTheme = newTheme
+                updateBitmap()
+                drawFrame()
             }
         }
 
@@ -292,6 +318,9 @@ class FoldWallpaperService : WallpaperService() {
 
         override fun onDestroy() {
             super.onDestroy()
+            try {
+                unregisterReceiver(timeReceiver)
+            } catch (_: Exception) {}
             motionModel?.stop()
             flowJob?.cancel()
             wallpaperBitmap?.recycle()
