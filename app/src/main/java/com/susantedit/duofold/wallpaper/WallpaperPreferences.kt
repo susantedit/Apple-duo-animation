@@ -22,10 +22,20 @@ object WallpaperPreferences {
     const val KEY_SPECULAR_INTENSITY = "specular_intensity"
     const val KEY_CHROMATIC_ABERRATION = "chromatic_aberration"
     const val KEY_AUTO_THEME_MODE = "auto_theme_mode"
+    const val KEY_CREASE_GLOW = "crease_glow_intensity"
+    const val KEY_CREASE_COLOR = "crease_color_name"
+    const val KEY_CHARGING_SURGE = "charging_surge_enabled"
+    const val KEY_DESK_FLOAT = "desk_float_mode"
 
     const val AUTO_THEME_OFF = "OFF"
     const val AUTO_THEME_SYSTEM = "SYSTEM"
     const val AUTO_THEME_SCHEDULE = "SCHEDULE"
+
+    const val GLOW_CYAN = "CYAN"
+    const val GLOW_GOLD = "GOLD"
+    const val GLOW_VIOLET = "VIOLET"
+    const val GLOW_EMERALD = "EMERALD"
+    const val GLOW_RUBY = "RUBY"
 
     const val THEME_GOLD = "GOLD"
     const val THEME_DARK = "DARK_AMOLED"
@@ -195,5 +205,43 @@ object WallpaperPreferences {
             }
             else -> false
         }
+    }
+
+    fun getCreaseGlowIntensity(context: Context): Float =
+        getPrefs(context).getFloat(KEY_CREASE_GLOW, 0.5f)
+
+    fun setCreaseGlowIntensity(context: Context, value: Float) {
+        getPrefs(context).edit().putFloat(KEY_CREASE_GLOW, value).apply()
+    }
+
+    fun getCreaseColorName(context: Context): String =
+        getPrefs(context).getString(KEY_CREASE_COLOR, GLOW_CYAN) ?: GLOW_CYAN
+
+    fun setCreaseColorName(context: Context, colorName: String) {
+        getPrefs(context).edit().putString(KEY_CREASE_COLOR, colorName).apply()
+    }
+
+    fun getCreaseGlowRgb(context: Context): Triple<Float, Float, Float> {
+        return when (getCreaseColorName(context)) {
+            GLOW_GOLD -> Triple(1.0f, 0.75f, 0.22f)
+            GLOW_VIOLET -> Triple(0.72f, 0.35f, 1.0f)
+            GLOW_EMERALD -> Triple(0.12f, 1.0f, 0.48f)
+            GLOW_RUBY -> Triple(1.0f, 0.18f, 0.32f)
+            else -> Triple(0.0f, 0.85f, 1.0f) // GLOW_CYAN
+        }
+    }
+
+    fun isChargingSurgeEnabled(context: Context): Boolean =
+        getPrefs(context).getBoolean(KEY_CHARGING_SURGE, true)
+
+    fun setChargingSurgeEnabled(context: Context, enabled: Boolean) {
+        getPrefs(context).edit().putBoolean(KEY_CHARGING_SURGE, enabled).apply()
+    }
+
+    fun isDeskFloatEnabled(context: Context): Boolean =
+        getPrefs(context).getBoolean(KEY_DESK_FLOAT, true)
+
+    fun setDeskFloatEnabled(context: Context, enabled: Boolean) {
+        getPrefs(context).edit().putBoolean(KEY_DESK_FLOAT, enabled).apply()
     }
 }

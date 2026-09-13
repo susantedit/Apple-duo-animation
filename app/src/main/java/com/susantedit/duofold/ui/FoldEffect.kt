@@ -106,6 +106,13 @@ fun Modifier.foldEffect(
                 setFloatUniform("isVertical", parameters.isVertical)
                 setFloatUniform("specularIntensity", parameters.specularIntensity)
                 setFloatUniform("chromaticAberration", parameters.chromaticAberration)
+                setFloatUniform("creaseGlowIntensity", parameters.creaseGlowIntensity)
+                setFloatUniform(
+                    "creaseGlowColor",
+                    parameters.creaseGlowR,
+                    parameters.creaseGlowG,
+                    parameters.creaseGlowB
+                )
             }
         } catch (e: Exception) {
             Log.e("FoldEffect", "RuntimeShader failed: ${e.message}", e)

@@ -22,10 +22,13 @@ import com.susantedit.duofold.sensors.FoldMotionModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.sin
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class FoldWallpaperService : WallpaperService() {
@@ -55,6 +58,13 @@ class FoldWallpaperService : WallpaperService() {
         private var invertTilt: Boolean = false
         private var specularIntensity: Float = WallpaperPreferences.DEFAULT_SPECULAR_INTENSITY
         private var chromaticAberration: Float = WallpaperPreferences.DEFAULT_CHROMATIC_ABERRATION
+        private var creaseGlowIntensity: Float = 0.5f
+        private var creaseGlowR: Float = 0.0f
+        private var creaseGlowG: Float = 0.85f
+        private var creaseGlowB: Float = 1.0f
+        private var chargingSurgeEnabled: Boolean = true
+        private var chargingSurgeActive: Boolean = false
+        private var chargingSurgeStartTime: Long = 0L
 
         private var touchTiltOffset: Float = 0f
         private var lastTouchX: Float = 0f
@@ -68,6 +78,14 @@ class FoldWallpaperService : WallpaperService() {
         private val timeReceiver = object : android.content.BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 checkAutoThemeTransition()
+            }
+        }
+
+        private val powerReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == Intent.ACTION_POWER_CONNECTED && chargingSurgeEnabled) {
+                    triggerChargingSurge()
+                }
             }
         }
 
@@ -93,6 +111,11 @@ class FoldWallpaperService : WallpaperService() {
             }
             try {
                 registerReceiver(timeReceiver, timeFilter)
+            } catch (_: Exception) {}
+
+            val powerFilter = IntentFilter(Intent.ACTION_POWER_CONNECTED)
+            try {
+                registerReceiver(powerReceiver, powerFilter)
             } catch (_: Exception) {}
 
             gestureDetector = GestureDetector(
@@ -126,6 +149,27 @@ class FoldWallpaperService : WallpaperService() {
             }
         }
 
+        private fun triggerChargingSurge() {
+            chargingSurgeActive = true
+            chargingSurgeStartTime = SystemClock.uptimeMillis()
+            if (hapticEnabled) {
+                HapticHelper.performFoldClick(applicationContext)
+            }
+            scope?.launch {
+                val duration = 1800L
+                while (chargingSurgeActive) {
+                    val elapsed = SystemClock.uptimeMillis() - chargingSurgeStartTime
+                    if (elapsed >= duration) {
+                        chargingSurgeActive = false
+                        drawFrame()
+                        break
+                    }
+                    drawFrame()
+                    delay(16L)
+                }
+            }
+        }
+
         private fun reloadPreferences() {
             val ctx = this@FoldWallpaperService
             blurSpread = WallpaperPreferences.getBlurSpread(ctx)
@@ -142,6 +186,13 @@ class FoldWallpaperService : WallpaperService() {
             motionModel?.invertTilt = invertTilt
             specularIntensity = WallpaperPreferences.getSpecularIntensity(ctx)
             chromaticAberration = WallpaperPreferences.getChromaticAberration(ctx)
+            creaseGlowIntensity = WallpaperPreferences.getCreaseGlowIntensity(ctx)
+            val rgb = WallpaperPreferences.getCreaseGlowRgb(ctx)
+            creaseGlowR = rgb.first
+            creaseGlowG = rgb.second
+            creaseGlowB = rgb.third
+            chargingSurgeEnabled = WallpaperPreferences.isChargingSurgeEnabled(ctx)
+            motionModel?.isDeskFloatEnabled = WallpaperPreferences.isDeskFloatEnabled(ctx)
 
             val newTheme = WallpaperPreferences.resolveEffectiveTheme(ctx)
             if (wallpaperBitmap == null || newTheme != currentTheme) {
@@ -271,8 +322,22 @@ class FoldWallpaperService : WallpaperService() {
             if (now - lastDrawTimestamp < minInterval) return
             lastDrawTimestamp = now
 
-            // Combine sensor tilt with touch drag offset, scaled by sensitivity
-            val totalTilt = ((sensorTilt * sensitivity) + touchTiltOffset).coerceIn(-45f, 45f)
+            // Calculate charging surge wave and crease glow pulse if active
+            var surgeTilt = 0f
+            var surgeGlowBoost = 0f
+            if (chargingSurgeActive) {
+                val elapsedSec = (now - chargingSurgeStartTime) / 1000f
+                if (elapsedSec < 1.8f) {
+                    val decay = exp(-elapsedSec * 2.2f)
+                    surgeTilt = sin(elapsedSec * 14f) * 16f * decay
+                    surgeGlowBoost = decay * 0.8f
+                } else {
+                    chargingSurgeActive = false
+                }
+            }
+
+            // Combine sensor tilt with touch drag offset and surge, scaled by sensitivity
+            val totalTilt = ((sensorTilt * sensitivity) + touchTiltOffset + surgeTilt).coerceIn(-45f, 45f)
             val effectiveHinge = if (abs(touchTiltOffset) > 5f) {
                 if (totalTilt >= 0f) 1f else -1f
             } else {
@@ -302,6 +367,9 @@ class FoldWallpaperService : WallpaperService() {
                     shader.setFloatUniform("isVertical", if (isVerticalFold) 1f else 0f)
                     shader.setFloatUniform("specularIntensity", specularIntensity)
                     shader.setFloatUniform("chromaticAberration", chromaticAberration)
+                    val effectiveGlow = (creaseGlowIntensity + surgeGlowBoost).coerceIn(0f, 1f)
+                    shader.setFloatUniform("creaseGlowIntensity", effectiveGlow)
+                    shader.setFloatUniform("creaseGlowColor", creaseGlowR, creaseGlowG, creaseGlowB)
 
                     val bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
                     shader.setInputShader("content", bmpShader)
@@ -320,6 +388,9 @@ class FoldWallpaperService : WallpaperService() {
             super.onDestroy()
             try {
                 unregisterReceiver(timeReceiver)
+            } catch (_: Exception) {}
+            try {
+                unregisterReceiver(powerReceiver)
             } catch (_: Exception) {}
             motionModel?.stop()
             flowJob?.cancel()

@@ -33,10 +33,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Settings
@@ -116,6 +119,10 @@ fun DemoContentView(
     var specularIntensity by remember { mutableFloatStateOf(WallpaperPreferences.getSpecularIntensity(context)) }
     var chromaticAberration by remember { mutableFloatStateOf(WallpaperPreferences.getChromaticAberration(context)) }
     var autoThemeMode by remember { mutableStateOf(WallpaperPreferences.getAutoThemeMode(context)) }
+    var creaseGlowIntensity by remember { mutableFloatStateOf(WallpaperPreferences.getCreaseGlowIntensity(context)) }
+    var creaseColorName by remember { mutableStateOf(WallpaperPreferences.getCreaseColorName(context)) }
+    var chargingSurgeEnabled by remember { mutableStateOf(WallpaperPreferences.isChargingSurgeEnabled(context)) }
+    var deskFloatEnabled by remember { mutableStateOf(WallpaperPreferences.isDeskFloatEnabled(context)) }
 
     val effectiveTheme = remember(selectedTheme, autoThemeMode) {
         WallpaperPreferences.resolveEffectiveTheme(context)
@@ -181,13 +188,18 @@ fun DemoContentView(
     }
 
     val isVertical = foldOrientation == WallpaperPreferences.ORIENTATION_VERTICAL
-    val liveParams = remember(blurSpread, darkening, isVertical, specularIntensity, chromaticAberration) {
+    val liveParams = remember(blurSpread, darkening, isVertical, specularIntensity, chromaticAberration, creaseGlowIntensity, creaseColorName) {
+        val rgb = WallpaperPreferences.getCreaseGlowRgb(context)
         FoldParameters(
             blurSpread = blurSpread,
             darkening = darkening,
             isVertical = if (isVertical) 1f else 0f,
             specularIntensity = specularIntensity,
-            chromaticAberration = chromaticAberration
+            chromaticAberration = chromaticAberration,
+            creaseGlowIntensity = creaseGlowIntensity,
+            creaseGlowR = rgb.first,
+            creaseGlowG = rgb.second,
+            creaseGlowB = rgb.third
         )
     }
 
@@ -776,6 +788,110 @@ fun DemoContentView(
                     valueRange = 0.0f..1.0f,
                     colors = SliderDefaults.colors(thumbColor = AccentGold, activeTrackColor = AccentGold)
                 )
+
+                Spacer(Modifier.height(10.dp))
+
+                // Feature: Neon Cyber Crease Glow Core
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = AccentGold, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Neon Crease Glow Core", color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Text("%.2f".format(creaseGlowIntensity), color = AccentGold, fontSize = 13.sp)
+                }
+                Slider(
+                    value = creaseGlowIntensity,
+                    onValueChange = {
+                        creaseGlowIntensity = it
+                        WallpaperPreferences.setCreaseGlowIntensity(context, it)
+                    },
+                    valueRange = 0.0f..1.0f,
+                    colors = SliderDefaults.colors(thumbColor = AccentGold, activeTrackColor = AccentGold)
+                )
+
+                // Crease Glow Color Selector
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Glow Aura Hue", color = TextWhite, fontSize = 13.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val glowHues = listOf(
+                            WallpaperPreferences.CREASE_COLOR_CYAN to Color(0xFF00E5FF),
+                            WallpaperPreferences.CREASE_COLOR_GOLD to Color(0xFFFFD700),
+                            WallpaperPreferences.CREASE_COLOR_VIOLET to Color(0xFFD000FF),
+                            WallpaperPreferences.CREASE_COLOR_EMERALD to Color(0xFF00FF88),
+                            WallpaperPreferences.CREASE_COLOR_RUBY to Color(0xFFFF1744)
+                        )
+                        glowHues.forEach { (name, color) ->
+                            val isSelected = creaseColorName == name
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(
+                                        width = if (isSelected) 2.5.dp else 1.dp,
+                                        color = if (isSelected) Color.White else Color.Transparent,
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        creaseColorName = name
+                                        WallpaperPreferences.setCreaseColorName(context, name)
+                                    }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                // Feature: Cable Charging 3D Warp Surge
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.FlashOn, contentDescription = null, tint = AccentGold, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Cable Plugin 3D Warp Surge", color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                        Text("3D shockwave fold wave & glow pulse when plugged into power", color = TextMuted, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = chargingSurgeEnabled,
+                        onCheckedChange = {
+                            chargingSurgeEnabled = it
+                            WallpaperPreferences.setChargingSurgeEnabled(context, it)
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AccentGold, checkedTrackColor = AccentGoldDim)
+                    )
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                // Feature: Ambient Desk Floating Mode
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Air, contentDescription = null, tint = AccentGold, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Ambient Desk Floating Mode", color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                        Text("Gently breathes in 3D when resting still on a desk", color = TextMuted, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = deskFloatEnabled,
+                        onCheckedChange = {
+                            deskFloatEnabled = it
+                            WallpaperPreferences.setDeskFloatEnabled(context, it)
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AccentGold, checkedTrackColor = AccentGoldDim)
+                    )
+                }
 
                 Spacer(Modifier.height(10.dp))
 

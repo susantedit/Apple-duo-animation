@@ -74,6 +74,8 @@ class FoldMotionModel(context: Context) : SensorEventListener {
     private var lastTimestampNs = 0L
     var isVerticalOrientation = false
     var invertTilt = false
+    var isDeskFloatEnabled = true
+    private var stillDurationS = 0f
 
     private val _tiltDegrees = MutableStateFlow(0f)
     val tiltDegrees: StateFlow<Float> = _tiltDegrees.asStateFlow()
@@ -195,13 +197,27 @@ class FoldMotionModel(context: Context) : SensorEventListener {
                     if (omegaMag < STILL_THRESHOLD_RAD_S) {
                         val alpha = (dtS / RECENTER_TAU_S).coerceIn(0f, 1f)
                         baselineRad += wrapAngle(predicted - baselineRad) * alpha
+                        stillDurationS += dtS
+                    } else {
+                        stillDurationS = 0f
                     }
+                } else {
+                    stillDurationS = 0f
                 }
                 val target =
                     if (autoRecenter) wrapAngle(predicted - baselineRad) else predicted
 
                 tiltRad += wrapAngle(target - tiltRad) * SMOOTHING
-                val rawTiltDeg = Math.toDegrees(tiltRad.toDouble()).toFloat()
+
+                // Ambient Desk Floating micro-motion when resting on desk
+                var ambientOffset = 0f
+                if (isDeskFloatEnabled && stillDurationS > 1.5f) {
+                    val floatBlend = ((stillDurationS - 1.5f) / 2.0f).coerceIn(0f, 1f)
+                    val timeSec = nowNs / 1_000_000_000.0
+                    ambientOffset = (kotlin.math.sin(timeSec * 1.3).toFloat() * 3.8f) * floatBlend
+                }
+
+                val rawTiltDeg = (Math.toDegrees(tiltRad.toDouble()).toFloat() + ambientOffset)
                     .coerceIn(-MAX_TILT, MAX_TILT)
                 val tiltDeg = if (invertTilt) -rawTiltDeg else rawTiltDeg
                 _tiltDegrees.value = tiltDeg

@@ -25,5 +25,9 @@ data class FoldParameters(
     val darkening: Float = 0.015f,
     val isVertical: Float = 0f,
     val specularIntensity: Float = 0.45f,
-    val chromaticAberration: Float = 0.35f
+    val chromaticAberration: Float = 0.35f,
+    val creaseGlowIntensity: Float = 0.5f,
+    val creaseGlowR: Float = 0.0f,
+    val creaseGlowG: Float = 0.85f,
+    val creaseGlowB: Float = 1.0f
 )
