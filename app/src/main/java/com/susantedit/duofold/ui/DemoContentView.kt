@@ -123,6 +123,8 @@ fun DemoContentView(
     var creaseColorName by remember { mutableStateOf(WallpaperPreferences.getCreaseColorName(context)) }
     var chargingSurgeEnabled by remember { mutableStateOf(WallpaperPreferences.isChargingSurgeEnabled(context)) }
     var deskFloatEnabled by remember { mutableStateOf(WallpaperPreferences.isDeskFloatEnabled(context)) }
+    var solarTrackingEnabled by remember { mutableStateOf(WallpaperPreferences.isSolarTrackingEnabled(context)) }
+    val solarData = remember(solarTrackingEnabled) { WallpaperPreferences.getSolarData(context) }
 
     val effectiveTheme = remember(selectedTheme, autoThemeMode) {
         WallpaperPreferences.resolveEffectiveTheme(context)
@@ -188,8 +190,9 @@ fun DemoContentView(
     }
 
     val isVertical = foldOrientation == WallpaperPreferences.ORIENTATION_VERTICAL
-    val liveParams = remember(blurSpread, darkening, isVertical, specularIntensity, chromaticAberration, creaseGlowIntensity, creaseColorName) {
+    val liveParams = remember(blurSpread, darkening, isVertical, specularIntensity, chromaticAberration, creaseGlowIntensity, creaseColorName, solarTrackingEnabled) {
         val rgb = WallpaperPreferences.getCreaseGlowRgb(context)
+        val solar = WallpaperPreferences.getSolarData(context)
         FoldParameters(
             blurSpread = blurSpread,
             darkening = darkening,
@@ -199,7 +202,11 @@ fun DemoContentView(
             creaseGlowIntensity = creaseGlowIntensity,
             creaseGlowR = rgb.first,
             creaseGlowG = rgb.second,
-            creaseGlowB = rgb.third
+            creaseGlowB = rgb.third,
+            solarShift = solar.shift,
+            solarColorR = solar.r,
+            solarColorG = solar.g,
+            solarColorB = solar.b
         )
     }
 
@@ -888,6 +895,31 @@ fun DemoContentView(
                         onCheckedChange = {
                             deskFloatEnabled = it
                             WallpaperPreferences.setDeskFloatEnabled(context, it)
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AccentGold, checkedTrackColor = AccentGoldDim)
+                    )
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                // Feature: Solar Sunlight Tracking (Time-of-Day Glass Reflection)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = AccentGold, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Solar Sun Angle Glare Engine", color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                        Text("Shifts glass reflection & warmth with real sun (${solarData.periodName})", color = TextMuted, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = solarTrackingEnabled,
+                        onCheckedChange = {
+                            solarTrackingEnabled = it
+                            WallpaperPreferences.setSolarTrackingEnabled(context, it)
                         },
                         colors = SwitchDefaults.colors(checkedThumbColor = AccentGold, checkedTrackColor = AccentGoldDim)
                     )

@@ -113,6 +113,13 @@ fun Modifier.foldEffect(
                     parameters.creaseGlowG,
                     parameters.creaseGlowB
                 )
+                setFloatUniform("solarShift", parameters.solarShift)
+                setFloatUniform(
+                    "solarColor",
+                    parameters.solarColorR,
+                    parameters.solarColorG,
+                    parameters.solarColorB
+                )
             }
         } catch (e: Exception) {
             Log.e("FoldEffect", "RuntimeShader failed: ${e.message}", e)

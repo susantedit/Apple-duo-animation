@@ -35,6 +35,8 @@ uniform float specularIntensity;
 uniform float chromaticAberration;
 uniform float creaseGlowIntensity;
 uniform float3 creaseGlowColor;
+uniform float solarShift;
+uniform float3 solarColor;
 
 const float GOLDEN_ANGLE = 2.39996322972865332; // radians, Vogel disk spacing
 const float TWO_PI = 6.28318530717958648;
@@ -87,24 +89,25 @@ half4 main(float2 fragCoord) {
     // Frosted glass absorbs: dim in proportion to how much it scatters.
     float atten = max(1.0 - darkening * radius, 0.0);
 
-    // Dynamic Specular Light Glare (sheen on crease and tilted glass)
-    float glare = 0.0;
+    // Dynamic Specular Light Glare (sheen on crease and tilted glass with solar tracking)
+    half3 glareColor = half3(0.0);
     if (specularIntensity > 0.01) {
         // Crease reflection gleam: sharpest near the bend
         float creaseDist = d;
         float creaseSheen = exp(-creaseDist * 0.025);
 
-        // Dynamic light sweep across tilted glass face
+        // Dynamic light sweep across tilted glass face with time-of-day solar shift
         float sweepCoord = mix(fragCoord.x / size.x, fragCoord.y / size.y, isVertical);
-        float lightCenter = 0.5 + 0.35 * sin(radians(tiltDegrees) * 2.0);
+        float lightCenter = clamp(0.5 + 0.35 * sin(radians(tiltDegrees) * 2.0) + solarShift * 0.25, 0.05, 0.95);
         float sweepDist = abs(sweepCoord - lightCenter);
         float sweepSheen = exp(-sweepDist * sweepDist * 24.0);
 
-        glare = (creaseSheen * 0.45 + sweepSheen * 0.35) * specularIntensity * sin(tilt);
+        float glareVal = (creaseSheen * 0.45 + sweepSheen * 0.35) * specularIntensity * sin(tilt);
+        glareColor = half3(solarColor) * half(glareVal);
     }
 
     if (radius < 0.5) {
-        half3 directCol = content.eval(hit).rgb * half(atten) + half3(glare);
+        half3 directCol = content.eval(hit).rgb * half(atten) + glareColor;
         if (creaseGlowIntensity > 0.01) {
             float coreLine = exp(-d * 0.08) * 1.6;
             float outerAura = exp(-d * 0.012) * 0.5;
@@ -141,7 +144,7 @@ half4 main(float2 fragCoord) {
         avg = mix(avg, chromaticColor, half(clamp(chromaticAberration * 0.75, 0.0, 1.0)));
     }
 
-    half3 finalColor = avg * half(atten) + half3(glare);
+    half3 finalColor = avg * half(atten) + glareColor;
 
     // Cyberpunk Luminous Crease Glow
     if (creaseGlowIntensity > 0.01) {

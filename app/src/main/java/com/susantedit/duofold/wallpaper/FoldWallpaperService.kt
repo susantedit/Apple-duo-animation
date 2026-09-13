@@ -65,6 +65,10 @@ class FoldWallpaperService : WallpaperService() {
         private var chargingSurgeEnabled: Boolean = true
         private var chargingSurgeActive: Boolean = false
         private var chargingSurgeStartTime: Long = 0L
+        private var solarShift: Float = 0f
+        private var solarR: Float = 1f
+        private var solarG: Float = 1f
+        private var solarB: Float = 1f
 
         private var touchTiltOffset: Float = 0f
         private var lastTouchX: Float = 0f
@@ -194,6 +198,12 @@ class FoldWallpaperService : WallpaperService() {
             chargingSurgeEnabled = WallpaperPreferences.isChargingSurgeEnabled(ctx)
             motionModel?.isDeskFloatEnabled = WallpaperPreferences.isDeskFloatEnabled(ctx)
 
+            val solar = WallpaperPreferences.getSolarData(ctx)
+            solarShift = solar.shift
+            solarR = solar.r
+            solarG = solar.g
+            solarB = solar.b
+
             val newTheme = WallpaperPreferences.resolveEffectiveTheme(ctx)
             if (wallpaperBitmap == null || newTheme != currentTheme) {
                 currentTheme = newTheme
@@ -203,12 +213,18 @@ class FoldWallpaperService : WallpaperService() {
 
         private fun checkAutoThemeTransition() {
             val ctx = this@FoldWallpaperService
+            val solar = WallpaperPreferences.getSolarData(ctx)
+            solarShift = solar.shift
+            solarR = solar.r
+            solarG = solar.g
+            solarB = solar.b
+
             val newTheme = WallpaperPreferences.resolveEffectiveTheme(ctx)
             if (newTheme != currentTheme) {
                 currentTheme = newTheme
                 updateBitmap()
-                drawFrame()
             }
+            drawFrame()
         }
 
         private fun isBatteryLow(): Boolean {
@@ -370,6 +386,8 @@ class FoldWallpaperService : WallpaperService() {
                     val effectiveGlow = (creaseGlowIntensity + surgeGlowBoost).coerceIn(0f, 1f)
                     shader.setFloatUniform("creaseGlowIntensity", effectiveGlow)
                     shader.setFloatUniform("creaseGlowColor", creaseGlowR, creaseGlowG, creaseGlowB)
+                    shader.setFloatUniform("solarShift", solarShift)
+                    shader.setFloatUniform("solarColor", solarR, solarG, solarB)
 
                     val bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
                     shader.setInputShader("content", bmpShader)

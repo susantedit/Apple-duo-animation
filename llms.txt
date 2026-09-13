@@ -1,0 +1,20 @@
+# DuoFold
+
+> Real-time 3D foldable screen simulator and live wallpaper for Android 13+.
+
+## Overview
+DuoFold is an open-source Android personalization app that gives standard smartphones the visual appearance and physical physics of a foldable device. Using Android AGSL (Android Graphics Shading Language) runtime shaders, DuoFold renders 3D screen bending, realistic crease lighting, glass refraction, and neon energy lines at up to 120 FPS.
+
+## Key Features
+- **3D Gyroscope Folding**: Real-time tilt and orientation tracking via device IMU (accelerometer and gyroscope).
+- **Neon Crease Glow Core**: Customizable illuminated cyber-glow running along the fold axis with 5 color presets.
+- **Cable Charging 3D Warp Surge**: Damped kinetic shockwave and neon glow burst when connected to power.
+- **Ambient Desk Floating Mode**: Autonomous gentle 3D breathing micro-motion when the phone is resting still on a surface.
+- **Custom Wallpaper Import**: Import the user's existing wallpaper or choose any photo from gallery.
+- **Optical Glass Refraction & Chromatic Aberration**: Prism color dispersion and specular sheen along the fold crease.
+- **Low-Battery Auto Freeze**: Automatically pauses shader computations when battery drops below 20%.
+- **Zero Network Permissions**: 100% offline, private, and secure.
+
+## Requirements
+- Android 13 (API level 33, Tiramisu) or higher.
+- Device support for Android Graphics Shading Language (AGSL).

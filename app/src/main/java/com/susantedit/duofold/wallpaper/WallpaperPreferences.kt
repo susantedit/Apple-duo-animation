@@ -26,6 +26,7 @@ object WallpaperPreferences {
     const val KEY_CREASE_COLOR = "crease_color_name"
     const val KEY_CHARGING_SURGE = "charging_surge_enabled"
     const val KEY_DESK_FLOAT = "desk_float_mode"
+    const val KEY_SOLAR_TRACKING = "solar_tracking_enabled"
 
     const val AUTO_THEME_OFF = "OFF"
     const val AUTO_THEME_SYSTEM = "SYSTEM"
@@ -243,5 +244,50 @@ object WallpaperPreferences {
 
     fun setDeskFloatEnabled(context: Context, enabled: Boolean) {
         getPrefs(context).edit().putBoolean(KEY_DESK_FLOAT, enabled).apply()
+    }
+
+    fun isSolarTrackingEnabled(context: Context): Boolean =
+        getPrefs(context).getBoolean(KEY_SOLAR_TRACKING, true)
+
+    fun setSolarTrackingEnabled(context: Context, enabled: Boolean) {
+        getPrefs(context).edit().putBoolean(KEY_SOLAR_TRACKING, enabled).apply()
+    }
+
+    data class SolarData(
+        val shift: Float,
+        val r: Float,
+        val g: Float,
+        val b: Float,
+        val periodName: String
+    )
+
+    fun getSolarData(context: Context): SolarData {
+        if (!isSolarTrackingEnabled(context)) {
+            return SolarData(0f, 1f, 1f, 1f, "Neutral Studio Light")
+        }
+        val cal = java.util.Calendar.getInstance()
+        val hour = cal.get(java.util.Calendar.HOUR_OF_DAY) + cal.get(java.util.Calendar.MINUTE) / 60f
+        return when {
+            hour in 5.5f..8.5f -> {
+                // Morning sunrise: light from east (left/top), soft amber-gold
+                val t = (hour - 5.5f) / 3f
+                SolarData(-0.8f + t * 0.5f, 1.0f, 0.82f, 0.55f, "Morning Dawn Sun")
+            }
+            hour in 8.5f..16.0f -> {
+                // Midday sun: center, crisp white
+                val t = (hour - 8.5f) / 7.5f
+                val shift = -0.3f + t * 0.6f
+                SolarData(shift, 1.0f, 1.0f, 1.0f, "Midday Solar Glare")
+            }
+            hour in 16.0f..19.5f -> {
+                // Golden hour & sunset: light from west (right/bottom), rich warm sunset gold
+                val t = (hour - 16f) / 3.5f
+                SolarData(0.3f + t * 0.5f, 1.0f, 0.68f, 0.35f, "Sunset Golden Hour")
+            }
+            else -> {
+                // Night / twilight: subtle cool lunar blue-white
+                SolarData(0.0f, 0.70f, 0.82f, 1.0f, "Lunar Moonlight")
+            }
+        }
     }
 }

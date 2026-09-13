@@ -29,5 +29,9 @@ data class FoldParameters(
     val creaseGlowIntensity: Float = 0.5f,
     val creaseGlowR: Float = 0.0f,
     val creaseGlowG: Float = 0.85f,
-    val creaseGlowB: Float = 1.0f
+    val creaseGlowB: Float = 1.0f,
+    val solarShift: Float = 0.0f,
+    val solarColorR: Float = 1.0f,
+    val solarColorG: Float = 1.0f,
+    val solarColorB: Float = 1.0f
 )
