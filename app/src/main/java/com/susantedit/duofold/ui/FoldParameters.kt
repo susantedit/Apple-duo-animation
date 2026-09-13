@@ -23,5 +23,7 @@ data class FoldParameters(
     val pixelsPerMillimeter: Float = 0f, // 0 = auto-resolve from display metrics
     val blurSpread: Float = 0.12f,
     val darkening: Float = 0.015f,
-    val isVertical: Float = 0f
+    val isVertical: Float = 0f,
+    val specularIntensity: Float = 0.45f,
+    val chromaticAberration: Float = 0.35f
 )

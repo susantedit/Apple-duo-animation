@@ -113,6 +113,8 @@ fun DemoContentView(
     var fpsLimit by remember { mutableIntStateOf(WallpaperPreferences.getFpsLimit(context)) }
     var invertTilt by remember { mutableStateOf(WallpaperPreferences.isInvertTiltEnabled(context)) }
     var onboardingDismissed by remember { mutableStateOf(WallpaperPreferences.isOnboardingDismissed(context)) }
+    var specularIntensity by remember { mutableFloatStateOf(WallpaperPreferences.getSpecularIntensity(context)) }
+    var chromaticAberration by remember { mutableFloatStateOf(WallpaperPreferences.getChromaticAberration(context)) }
 
     val wallpaperManager = remember { WallpaperManager.getInstance(context) }
     var isLiveWallpaperActive by remember {
@@ -171,11 +173,13 @@ fun DemoContentView(
     }
 
     val isVertical = foldOrientation == WallpaperPreferences.ORIENTATION_VERTICAL
-    val liveParams = remember(blurSpread, darkening, isVertical) {
+    val liveParams = remember(blurSpread, darkening, isVertical, specularIntensity, chromaticAberration) {
         FoldParameters(
             blurSpread = blurSpread,
             darkening = darkening,
-            isVertical = if (isVertical) 1f else 0f
+            isVertical = if (isVertical) 1f else 0f,
+            specularIntensity = specularIntensity,
+            chromaticAberration = chromaticAberration
         )
     }
 
@@ -667,6 +671,40 @@ fun DemoContentView(
                         WallpaperPreferences.setDarkening(context, it)
                     },
                     valueRange = 0.005f..0.035f,
+                    colors = SliderDefaults.colors(thumbColor = AccentGold, activeTrackColor = AccentGold)
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                // Feature: Dynamic Specular Light Sheen Slider
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Glass Light Sheen (Specular)", color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Text("%.2f".format(specularIntensity), color = AccentGold, fontSize = 13.sp)
+                }
+                Slider(
+                    value = specularIntensity,
+                    onValueChange = {
+                        specularIntensity = it
+                        WallpaperPreferences.setSpecularIntensity(context, it)
+                    },
+                    valueRange = 0.0f..1.0f,
+                    colors = SliderDefaults.colors(thumbColor = AccentGold, activeTrackColor = AccentGold)
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                // Feature: Prism Chromatic Dispersion Slider
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Prism Optical Rainbow (Dispersion)", color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Text("%.2f".format(chromaticAberration), color = AccentGold, fontSize = 13.sp)
+                }
+                Slider(
+                    value = chromaticAberration,
+                    onValueChange = {
+                        chromaticAberration = it
+                        WallpaperPreferences.setChromaticAberration(context, it)
+                    },
+                    valueRange = 0.0f..1.0f,
                     colors = SliderDefaults.colors(thumbColor = AccentGold, activeTrackColor = AccentGold)
                 )
 

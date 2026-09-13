@@ -31,6 +31,8 @@ uniform float hingeSide;
 uniform float blurSpread;
 uniform float darkening;
 uniform float isVertical;
+uniform float specularIntensity;
+uniform float chromaticAberration;
 
 const float GOLDEN_ANGLE = 2.39996322972865332; // radians, Vogel disk spacing
 const float TWO_PI = 6.28318530717958648;
@@ -83,8 +85,25 @@ half4 main(float2 fragCoord) {
     // Frosted glass absorbs: dim in proportion to how much it scatters.
     float atten = max(1.0 - darkening * radius, 0.0);
 
+    // Dynamic Specular Light Glare (sheen on crease and tilted glass)
+    float glare = 0.0;
+    if (specularIntensity > 0.01) {
+        // Crease reflection gleam: sharpest near the bend
+        float creaseDist = d;
+        float creaseSheen = exp(-creaseDist * 0.025);
+
+        // Dynamic light sweep across tilted glass face
+        float sweepCoord = mix(fragCoord.x / size.x, fragCoord.y / size.y, isVertical);
+        float lightCenter = 0.5 + 0.35 * sin(radians(tiltDegrees) * 2.0);
+        float sweepDist = abs(sweepCoord - lightCenter);
+        float sweepSheen = exp(-sweepDist * sweepDist * 24.0);
+
+        glare = (creaseSheen * 0.45 + sweepSheen * 0.35) * specularIntensity * sin(tilt);
+    }
+
     if (radius < 0.5) {
-        return content.eval(hit) * half(atten);
+        half3 directCol = content.eval(hit).rgb * half(atten) + half3(glare);
+        return half4(clamp(directCol, 0.0, 1.0), 1.0);
     }
 
     // Vogel disk with per-pixel rotation (banding becomes frosted-glass grain).
@@ -103,5 +122,17 @@ half4 main(float2 fragCoord) {
         wsum += w;
     }
     half3 avg = sum / half(max(wsum, 1.0));
-    return half4(avg * half(atten), 1.0);
+
+    // Prism Chromatic Aberration (RGB optical dispersion along fold direction)
+    if (chromaticAberration > 0.01) {
+        float dispAmount = chromaticAberration * min(radius, 25.0) * 0.35;
+        float2 dispDir = mix(float2(side, 0.0), float2(0.0, side), isVertical);
+        half3 redSample = content.eval(hit + dispDir * dispAmount).rgb;
+        half3 blueSample = content.eval(hit - dispDir * dispAmount).rgb;
+        half3 chromaticColor = half3(redSample.r, avg.g, blueSample.b);
+        avg = mix(avg, chromaticColor, half(clamp(chromaticAberration * 0.75, 0.0, 1.0)));
+    }
+
+    half3 finalColor = avg * half(atten) + half3(glare);
+    return half4(clamp(finalColor, 0.0, 1.0), 1.0);
 }

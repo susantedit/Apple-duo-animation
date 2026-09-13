@@ -19,6 +19,8 @@ object WallpaperPreferences {
 
     const val KEY_INVERT_TILT = "invert_tilt"
     const val KEY_ONBOARDING_DISMISSED = "onboarding_dismissed"
+    const val KEY_SPECULAR_INTENSITY = "specular_intensity"
+    const val KEY_CHROMATIC_ABERRATION = "chromatic_aberration"
 
     const val THEME_GOLD = "GOLD"
     const val THEME_DARK = "DARK_AMOLED"
@@ -31,6 +33,8 @@ object WallpaperPreferences {
     const val DEFAULT_BLUR_SPREAD = 0.12f
     const val DEFAULT_DARKENING = 0.015f
     const val DEFAULT_SENSITIVITY = 1.0f
+    const val DEFAULT_SPECULAR_INTENSITY = 0.45f
+    const val DEFAULT_CHROMATIC_ABERRATION = 0.35f
 
     private fun getPrefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -123,5 +127,19 @@ object WallpaperPreferences {
 
     fun setOnboardingDismissed(context: Context, dismissed: Boolean) {
         getPrefs(context).edit().putBoolean(KEY_ONBOARDING_DISMISSED, dismissed).apply()
+    }
+
+    fun getSpecularIntensity(context: Context): Float =
+        getPrefs(context).getFloat(KEY_SPECULAR_INTENSITY, DEFAULT_SPECULAR_INTENSITY)
+
+    fun setSpecularIntensity(context: Context, value: Float) {
+        getPrefs(context).edit().putFloat(KEY_SPECULAR_INTENSITY, value).apply()
+    }
+
+    fun getChromaticAberration(context: Context): Float =
+        getPrefs(context).getFloat(KEY_CHROMATIC_ABERRATION, DEFAULT_CHROMATIC_ABERRATION)
+
+    fun setChromaticAberration(context: Context, value: Float) {
+        getPrefs(context).edit().putFloat(KEY_CHROMATIC_ABERRATION, value).apply()
     }
 }

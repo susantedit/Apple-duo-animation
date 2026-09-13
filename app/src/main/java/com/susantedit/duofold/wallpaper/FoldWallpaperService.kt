@@ -53,6 +53,8 @@ class FoldWallpaperService : WallpaperService() {
         private var fpsLimit: Int = 60
         private var isVerticalFold: Boolean = false
         private var invertTilt: Boolean = false
+        private var specularIntensity: Float = WallpaperPreferences.DEFAULT_SPECULAR_INTENSITY
+        private var chromaticAberration: Float = WallpaperPreferences.DEFAULT_CHROMATIC_ABERRATION
 
         private var touchTiltOffset: Float = 0f
         private var lastTouchX: Float = 0f
@@ -122,6 +124,8 @@ class FoldWallpaperService : WallpaperService() {
             motionModel?.isVerticalOrientation = isVerticalFold
             invertTilt = WallpaperPreferences.isInvertTiltEnabled(ctx)
             motionModel?.invertTilt = invertTilt
+            specularIntensity = WallpaperPreferences.getSpecularIntensity(ctx)
+            chromaticAberration = WallpaperPreferences.getChromaticAberration(ctx)
 
             val newTheme = WallpaperPreferences.getTheme(ctx)
             if (wallpaperBitmap == null || newTheme != currentTheme) {
@@ -270,6 +274,8 @@ class FoldWallpaperService : WallpaperService() {
                     shader.setFloatUniform("blurSpread", blurSpread)
                     shader.setFloatUniform("darkening", darkening * 6f / pxPerMm)
                     shader.setFloatUniform("isVertical", if (isVerticalFold) 1f else 0f)
+                    shader.setFloatUniform("specularIntensity", specularIntensity)
+                    shader.setFloatUniform("chromaticAberration", chromaticAberration)
 
                     val bmpShader = BitmapShader(bmp, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
                     shader.setInputShader("content", bmpShader)

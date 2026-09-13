@@ -104,6 +104,8 @@ fun Modifier.foldEffect(
                 // darken ~pxPerMm/6x too fast and crush to black (iOS-unfaithful).
                 setFloatUniform("darkening", parameters.darkening * 6f / resolvedPxPerMm)
                 setFloatUniform("isVertical", parameters.isVertical)
+                setFloatUniform("specularIntensity", parameters.specularIntensity)
+                setFloatUniform("chromaticAberration", parameters.chromaticAberration)
             }
         } catch (e: Exception) {
             Log.e("FoldEffect", "RuntimeShader failed: ${e.message}", e)
