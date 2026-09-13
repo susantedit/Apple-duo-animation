@@ -1,4 +1,4 @@
-package com.example.duofold
+package com.susantedit.duofold
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,8 +10,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import com.example.duofold.sensors.FoldMotionModel
-import com.example.duofold.ui.ContentView
+import com.susantedit.duofold.sensors.FoldMotionModel
+import com.susantedit.duofold.ui.ContentView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

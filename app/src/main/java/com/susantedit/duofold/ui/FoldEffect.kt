@@ -1,4 +1,4 @@
-package com.example.duofold.ui
+package com.susantedit.duofold.ui
 
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import com.example.duofold.R
+import com.susantedit.duofold.R
 import java.io.BufferedReader
 
 /** In-memory fallback so previews/tests without res/raw still work. */

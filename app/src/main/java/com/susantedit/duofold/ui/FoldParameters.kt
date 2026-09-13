@@ -1,4 +1,4 @@
-package com.example.duofold.ui
+package com.susantedit.duofold.ui
 
 /**
  * Physical parameters of the frosted-glass fold (mirrors Swift `FoldParameters`).

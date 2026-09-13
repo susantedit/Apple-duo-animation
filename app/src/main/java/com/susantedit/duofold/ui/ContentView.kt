@@ -1,4 +1,4 @@
-package com.example.duofold.ui
+package com.susantedit.duofold.ui
 
 import android.os.Build
 import androidx.compose.foundation.layout.Box
@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.duofold.sensors.FoldMotionModel
+import com.susantedit.duofold.sensors.FoldMotionModel
 
 /**
  * Composition root: [DemoContentView] wrapped in [foldEffect], with tilt

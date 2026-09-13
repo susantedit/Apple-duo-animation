@@ -1,4 +1,4 @@
-package com.example.duofold.ui
+package com.susantedit.duofold.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -158,7 +158,7 @@ fun DemoContentView(
                         )
                     )
                     .padding(20.dp)
-            ) {
+                ) {
                 Column {
                     Row(verticalAlignment = Alignment.Top) {
                         Column(Modifier.weight(1f)) {

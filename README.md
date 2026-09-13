@@ -1,4 +1,4 @@
-# DuoFold — iPhone Duo fold/opening animation for Android
+# Fold Motion — Motion that bends with screen
 
 ## Model
 Fixed interface plane at zero tilt · stationary eye on the plane normal
@@ -8,7 +8,7 @@ blur + darken, black on miss.
 
 ## Project layout
 ```
-app/src/main/java/com/example/duofold/
+app/src/main/java/com/susantedit/duofold/
   MainActivity.kt
   ui/FoldEffect.kt       Modifier.foldEffect() — graphicsLayer + RuntimeShader
   ui/FoldParameters.kt   viewDistanceMm, blur/darken tuning

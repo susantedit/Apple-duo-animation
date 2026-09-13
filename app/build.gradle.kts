@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.duofold"
+    namespace = "com.susantedit.duofold"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.duofold"
+        applicationId = "com.susantedit.duofold"
         minSdk = 33
         targetSdk = 34
         versionCode = 1

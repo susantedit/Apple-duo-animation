@@ -1,4 +1,4 @@
-package com.example.duofold.sensors
+package com.susantedit.duofold.sensors
 
 import android.content.Context
 import android.hardware.Sensor
